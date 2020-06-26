@@ -31,19 +31,23 @@ let getCache = function(text) {
 const callback = function(mutationsList, observer) {
     for(let mutation of mutationsList) {
         if (mutation.type === 'childList') {
-            if (mutation.addedNodes.length > 0)
-                if (mutation.addedNodes[0].className === "c-virtual_list__item") {
+            if (mutation.addedNodes.length > 0) {
+                let className = mutation.addedNodes[0].className ;
+                if ((className === "p-workspace__secondary_view") ||
+                    (className === "c-virtual_list__item") ||
+                    (className === "c-virtual_list")) {
                     let elements = mutation.addedNodes[0].getElementsByClassName("p-rich_text_block");
-                    if (elements.length > 0) {
-                        let textEls = findTextNode(elements[0]);
+                    for (let element of elements) {
+                        let textEls = findTextNode(element);
+                        //console.log(textEls);
                         for (let t of textEls) {
                             let textValue = t.textContent;
                             if (textValue.match(re) == null) continue;
-                           
+
                             let cacheContent = getCache(textValue);
 
                             if (cacheContent) {
-                                console.log("Cache found");
+                                //console.log("Cache found");
                                 t.nodeValue = cacheContent;
                                 continue;
                             }
@@ -53,7 +57,7 @@ const callback = function(mutationsList, observer) {
                                     console.log(err);
                                 }
                                 if (data) {
-                                    console.log("Success!");
+                                    //console.log("Success!");
                                     localStorage.setItem(t.textContent, data.TranslatedText);
                                     t.nodeValue = data.TranslatedText;
                                 }
@@ -61,6 +65,7 @@ const callback = function(mutationsList, observer) {
                         }
                     }
                 }
+            }
         }
         else if (mutation.type === 'attributes') {
         }
@@ -77,8 +82,8 @@ const docCallback = function(mutationsList, observer) {
         if (mutation.type === 'childList') {
             if (mutation.target.className === "p-client_container") {
                 docObserver.disconnect();
-                let targetNodes =  document.getElementsByClassName('c-virtual_list__scroll_container');
-
+                let targetNodes =  document.getElementsByClassName('p-workspace-layout');
+                console.log(targetNodes);
                 observer = new MutationObserver(callback);
                 for (let node of targetNodes) {
                     observer.observe(node, config);
