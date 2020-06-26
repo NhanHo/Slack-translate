@@ -1,14 +1,5 @@
 document.body.style.border = "5px solid blue";
-let elementSelector = '.p-rich_text_section';
-let targetNode = document.getElementsByClassName('p-workspace__primary_view_body')[0];
-// Options for the observer (which mutations to observe)
 const config = { attributes: true, childList:true, subtree: true, characterData: true, attributeOldValue: true };
-
-
-let cred = {
-    awsAccessKeyId: "AKIAYRPV4IV5IQOUS7LY",
-    awsSecretAccessKey: "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"
-}
 AWS.config.region = 'ap-northeast-1';
 let ep = new AWS.Endpoint('https://translate.ap-northeast-1.amazonaws.com');
 
@@ -19,9 +10,14 @@ let params = {
     "SourceLanguageCode": "auto",
     "TargetLanguageCode": "en"
 }
-
+let re = new RegExp("[\u3040-\u30ff\u3400-\u4dbf\u4e00-\u9fff\uf900-\ufaff\uff66-\uff9f]");
 // Callback function to execute when mutations are observed
 let x = 0;
+if (localStorage.length > 100000) {
+    for (let i in localStorage) {
+        localStorage.removeItem(i);
+    }
+}
 function findTextNode(node) {
     if (node.nodeType == node.TEXT_NODE)
         return [node];
@@ -31,27 +27,36 @@ function findTextNode(node) {
     }
     return result;
 }
-
+let getCache = function(text) {
+    return localStorage.getItem(text);
+}
 const callback = function(mutationsList, observer) {
-    // Use traditional 'for loops' for IE 11
     for(let mutation of mutationsList) {
         if (mutation.type === 'childList') {
-            console.log(mutation);
             if (mutation.addedNodes.length > 0)
                 if (mutation.addedNodes[0].className === "c-virtual_list__item") {
                     let elements = mutation.addedNodes[0].getElementsByClassName("p-rich_text_block");
                     if (elements.length > 0) {
                         let textEls = findTextNode(elements[0]);
                         for (let t of textEls) {
-                            console.log(t.textContent);
+                            let textValue = t.textContent;
+                            if (textValue.match(re) == null) continue;
+
+                            let cacheContent = getCache(textValue);
+
+                            if (cacheContent) {
+                                console.log("Cache found");
+                                t.nodeValue = cacheContent;
+                                continue;
+                            }
                             let postParams = {...params, "Text": t.textContent};
-                            console.log(postParams);
                             translator.translateText(postParams, function onIncomingMessageTranslate(err, data)  {
                                 if (err) {
                                     console.log(err);
                                 }
                                 if (data) {
                                     console.log("Success!");
+                                    localStorage.setItem(t.textContent, data.TranslatedText);
                                     t.nodeValue = data.TranslatedText;
                                 }
                             })
@@ -60,33 +65,12 @@ const callback = function(mutationsList, observer) {
                 }
         }
         else if (mutation.type === 'attributes') {
-            //console.log('The ' + mutation.attributeName + ' attribute was modified.');
         }
-        //console.log(mutation);
     }
 };
 
-// Create an observer instance linked to the callback function
 const observer = new MutationObserver(callback);
 
-// Start observing the target node for configured mutations
-//
-function docReady(fn) {
-    // see if DOM is already available
-    let targetNode = document.getElementsByClassName('p-workspace__primary_view_body')[0];
-    console.log(targetNode);
-    //if (document.readyState === "complete" || document.readyState === "interactive") {
-    if (targetNode) {
-        // call on next available tick
-        alert(targetNode);
-        setTimeout(fn, 1);
-    } else {
-        console.log("Looking for node");
-        document.addEventListener("DOMContentLoaded", fn);
-    }
-}
-//const config = { attributes: true, childList:true, subtree: true, characterData: true, attributeOldValue: true };
-//const targetNode = document.getElementsByClassName('p-workspace__primary_view_body')[0];
 let lock = false;
 const docCallback = function(mutationsList, observer) {
     // Use traditional 'for loops' for IE 11
@@ -94,7 +78,7 @@ const docCallback = function(mutationsList, observer) {
     for(let mutation of mutationsList) {
         if (mutation.type === 'childList') {
             if (mutation.target.className === "p-client_container") {
-                //docObserver.disconnect();
+                docObserver.disconnect();
                 let targetNodes =  document.getElementsByClassName('c-virtual_list__scroll_container');
 
                 observer = new MutationObserver(callback);
@@ -104,32 +88,10 @@ const docCallback = function(mutationsList, observer) {
                 }
             }
         }
-        else if (mutation.type === 'attributes') {
-            //console.log('The ' + mutation.attributeName + ' attribute was modified.');
-        }
-        //console.log(mutation);
     }
 };
 const docObserver = new MutationObserver(docCallback);
-//observer.observe(targetNode, config);
-//docObserver.observe(targetNode, config);
 docObserver.observe(document.body, config);
-/*docReady(function() {
-    //observer.observe(targetNode, config);
-    })*/
-/*$(document).on("ready", ".p-workspace__primary_view_body", function name() {
-    alert("Here");
-    })*/
-
-/*document.addEventListener('load', function(e) {
-    // loop parent nodes from the target to the delegation node
-    alert("Observe");
-    for (var target = e.target; target && target != this; target = target.parentNode) {
-        if (target.matches(elementSelector)) {
-            //handler.call(target, e);
-        }
-    }
-}, false);*/
 
 // Later, you can stop observing
 //observer.disconnect();

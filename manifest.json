@@ -13,7 +13,7 @@
   "content_scripts": [
     {
       "matches": ["*://app.slack.com/client/*"],
-      "js": ["jquery-3.5.1.min.js","aws-sdk-2.701.0.min.js", "app.js"]
+      "js": ["jquery-3.5.1.min.js","aws-sdk-2.701.0.min.js", "credentials.js","app.js"]
     }
   ],
   "permissions": [

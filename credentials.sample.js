@@ -1,0 +1,4 @@
+window.cred = {
+    awsAccessKeyId: "",
+    awsSecretAccessKey: ""
+}
