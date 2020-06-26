@@ -1,10 +1,10 @@
 {
 
   "manifest_version": 2,
-  "name": "Borderify",
-  "version": "1.0",
+  "name": "Slack translator",
+  "version": "0.0.1",
 
-  "description": "Adds a red border to all webpages matching mozilla.org.",
+  "description": "Translate all chat message on slack from Japanese to English",
 
   "icons": {
     "48": "icons/border-48.png"

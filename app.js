@@ -11,8 +11,6 @@ let params = {
     "TargetLanguageCode": "en"
 }
 let re = new RegExp("[\u3040-\u30ff\u3400-\u4dbf\u4e00-\u9fff\uf900-\ufaff\uff66-\uff9f]");
-// Callback function to execute when mutations are observed
-let x = 0;
 if (localStorage.length > 100000) {
     for (let i in localStorage) {
         localStorage.removeItem(i);
@@ -41,7 +39,7 @@ const callback = function(mutationsList, observer) {
                         for (let t of textEls) {
                             let textValue = t.textContent;
                             if (textValue.match(re) == null) continue;
-
+                           
                             let cacheContent = getCache(textValue);
 
                             if (cacheContent) {
